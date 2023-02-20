@@ -227,7 +227,7 @@ func TestPositive(t *testing.T) {
 			result, err := Uniq(tt.input, tt.options)
 
 			require.NoError(t, err)
-			require.Equal(t, result, tt.output)
+			require.Equal(t, tt.output, result)
 		})
 	}
 }
@@ -238,7 +238,7 @@ func TestNegative(t *testing.T) {
 			result, err := Uniq(tt.input, tt.options)
 
 			require.Error(t, err)
-			require.Equal(t, result, tt.output)
+			require.Equal(t, tt.output, result)
 		})
 	}
 }
