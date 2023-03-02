@@ -14,14 +14,15 @@ func main() {
 	expression := scanner.Text()
 
 	if scanner.Err() != nil {
-		fmt.Println(scanner.Err())
+		fmt.Println(fmt.Errorf("failed to read expression: %w", scanner.Err()).Error())
+		return
 	}
 
 	var result float64
 	var err error
 
 	if result, err = calc.Calculate(expression); err != nil {
-		fmt.Println(err)
+		fmt.Println(fmt.Errorf("failed to calculate expression: %w", err).Error())
 		return
 	}
 

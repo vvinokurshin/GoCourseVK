@@ -4,12 +4,13 @@ import (
 	"calc/queue"
 	"calc/stack"
 	"errors"
+	pkgErr "github.com/pkg/errors"
 	"math"
 	"strconv"
 	"unicode"
 )
 
-var IncorrectInputErr = errors.New("error: incorrect inout string")
+var IncorrectInputErr = errors.New("error: incorrect input string")
 var DivisionByZero = errors.New("error: division by zero")
 
 const (
@@ -116,7 +117,7 @@ func Calculate(expression string) (float64, error) {
 	q, err := toPostfix(expression)
 
 	if err != nil {
-		return result, err
+		return result, pkgErr.Wrap(err, "postfix conversion error")
 	}
 
 	var st stack.Stack
@@ -129,7 +130,7 @@ func Calculate(expression string) (float64, error) {
 			var number float64
 
 			if number, err = strconv.ParseFloat(str, 64); err != nil {
-				return result, IncorrectInputErr
+				return result, pkgErr.Wrap(err, "failed to parse float")
 			}
 
 			st.Push(number)
@@ -137,26 +138,26 @@ func Calculate(expression string) (float64, error) {
 			second, success := st.Top().(float64)
 
 			if !success {
-				return result, IncorrectInputErr
+				return result, pkgErr.Wrap(IncorrectInputErr, "error of conversion to float")
 			}
 
 			st.Pop()
 			first, success := st.Top().(float64)
 
 			if !success {
-				return result, IncorrectInputErr
+				return result, pkgErr.Wrap(IncorrectInputErr, "error of conversion to float")
 			}
 
 			st.Pop()
 			var tmpResult float64
 
 			if tmpResult, err = operation(first, element.(rune), second); err != nil {
-				return result, err
+				return result, pkgErr.Wrap(err, "operation application error")
 			}
 
 			st.Push(tmpResult)
 		} else {
-			return result, IncorrectInputErr
+			return result, pkgErr.Wrap(IncorrectInputErr, "error of conversion to string")
 		}
 	}
 

@@ -1,11 +1,10 @@
 package main
 
 import (
-	"bufio"
-	"errors"
 	"flag"
 	"fmt"
 	"os"
+	"uniq/streamOperations"
 	"uniq/uniq"
 )
 
@@ -15,84 +14,44 @@ func main() {
 	flag.Parse()
 
 	if len(flag.Args()) > 2 {
-		fmt.Println(errors.New("error: too many args"))
+		fmt.Println(fmt.Errorf("error: too many args").Error())
 		uniq.Usage()
 		return
 	}
 
-	input, err := getStream(os.Stdin, 0, os.Open)
+	input, err := streamOperations.GetStream(os.Stdin, 0, os.Open)
 
-	if checkError(err) {
+	if err != nil {
+		fmt.Println(fmt.Errorf("failed to get input stream: %w", err).Error())
 		return
 	}
 
-	strings, err := readLines(input)
+	strings, err := streamOperations.ReadLines(input)
 
-	if checkError(err) {
+	if err != nil {
+		fmt.Println(fmt.Errorf("failed to readLines: %w", err).Error())
 		return
 	}
 
 	result, err := uniq.Uniq(strings, options)
 
-	if checkError(err) {
+	if err != nil {
+		fmt.Println(fmt.Errorf("failed to Uniq: %w", err).Error())
 		uniq.Usage()
 		return
 	}
 
-	output, err := getStream(os.Stdout, 1, os.Create)
+	output, err := streamOperations.GetStream(os.Stdout, 1, os.Create)
 
-	if checkError(err) {
-		return
-	}
-
-	err = writeLines(output, result)
-
-	if checkError(err) {
-		return
-	}
-}
-
-func checkError(err error) bool {
 	if err != nil {
-		fmt.Println(err)
-		return true
+		fmt.Println(fmt.Errorf("failed to get output stream: %w", err).Error())
+		return
 	}
 
-	return false
-}
+	err = streamOperations.WriteLines(output, result)
 
-func getStream(defaultValue *os.File, numArg int, operation func(string) (*os.File, error)) (*os.File, error) {
-	var err error
-	stream := defaultValue
-
-	if filename := flag.Arg(numArg); filename != "" {
-		if stream, err = operation(filename); err != nil {
-			return nil, err
-		}
-
-		defer stream.Close()
+	if err != nil {
+		fmt.Println(fmt.Errorf("failed to write lines: %w", err).Error())
+		return
 	}
-
-	return stream, nil
-}
-
-func readLines(input *os.File) ([]string, error) {
-	var lines []string
-	scanner := bufio.NewScanner(input)
-
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-
-	return lines, scanner.Err()
-}
-
-func writeLines(output *os.File, strings []string) error {
-	writer := bufio.NewWriter(output)
-
-	for _, line := range strings {
-		fmt.Fprintln(writer, line)
-	}
-
-	return writer.Flush()
 }
