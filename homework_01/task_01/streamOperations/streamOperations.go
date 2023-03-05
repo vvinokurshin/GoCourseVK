@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	pkgErr "github.com/pkg/errors"
 	"os"
 )
 
@@ -14,7 +13,7 @@ func GetStream(defaultValue *os.File, numArg int, operation func(string) (*os.Fi
 
 	if filename := flag.Arg(numArg); filename != "" {
 		if stream, err = operation(filename); err != nil {
-			return nil, pkgErr.Wrap(err, "error opening/creating a file")
+			return nil, fmt.Errorf("failed to open/create file: %w", err)
 		}
 
 		defer stream.Close()

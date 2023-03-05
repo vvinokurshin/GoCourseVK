@@ -4,14 +4,14 @@ import (
 	"calc/queue"
 	"calc/stack"
 	"errors"
-	pkgErr "github.com/pkg/errors"
+	"fmt"
 	"math"
 	"strconv"
 	"unicode"
 )
 
-var IncorrectInputErr = errors.New("error: incorrect input string")
-var DivisionByZero = errors.New("error: division by zero")
+var IncorrectInputErr = errors.New("incorrect input string")
+var DivisionByZero = errors.New("division by zero")
 
 const (
 	MUL_DIV_PRIORITY  int     = 2
@@ -115,9 +115,8 @@ func operation(first float64, op rune, second float64) (float64, error) {
 func Calculate(expression string) (float64, error) {
 	result := 0.0
 	q, err := toPostfix(expression)
-
 	if err != nil {
-		return result, pkgErr.Wrap(err, "postfix conversion error")
+		return result, fmt.Errorf("postfix conversion error: %w", err)
 	}
 
 	var st stack.Stack
@@ -130,34 +129,32 @@ func Calculate(expression string) (float64, error) {
 			var number float64
 
 			if number, err = strconv.ParseFloat(str, 64); err != nil {
-				return result, pkgErr.Wrap(err, "failed to parse float")
+				return result, fmt.Errorf("failed to parse float: %w", err)
 			}
 
 			st.Push(number)
 		} else if element == '+' || element == '-' || element == '*' || element == '/' {
 			second, success := st.Top().(float64)
-
 			if !success {
-				return result, pkgErr.Wrap(IncorrectInputErr, "error of conversion to float")
+				return result, fmt.Errorf("error of conversion to float: %w", IncorrectInputErr)
 			}
 
 			st.Pop()
 			first, success := st.Top().(float64)
-
 			if !success {
-				return result, pkgErr.Wrap(IncorrectInputErr, "error of conversion to float")
+				return result, fmt.Errorf("error of conversion to float: %w", IncorrectInputErr)
 			}
 
 			st.Pop()
 			var tmpResult float64
 
 			if tmpResult, err = operation(first, element.(rune), second); err != nil {
-				return result, pkgErr.Wrap(err, "operation application error")
+				return result, fmt.Errorf("operation application error: %w", err)
 			}
 
 			st.Push(tmpResult)
 		} else {
-			return result, pkgErr.Wrap(IncorrectInputErr, "error of conversion to string")
+			return result, fmt.Errorf("error of conversion to string: %w", IncorrectInputErr)
 		}
 	}
 

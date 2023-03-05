@@ -12,7 +12,6 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Scan()
 	expression := scanner.Text()
-
 	if scanner.Err() != nil {
 		fmt.Println(fmt.Errorf("failed to read expression: %w", scanner.Err()).Error())
 		return

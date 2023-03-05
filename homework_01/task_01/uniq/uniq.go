@@ -3,7 +3,6 @@ package uniq
 import (
 	"errors"
 	"fmt"
-	pkgErr "github.com/pkg/errors"
 	"strings"
 )
 
@@ -71,7 +70,7 @@ func Uniq(strs []string, options Options) ([]string, error) {
 	result := []string{}
 
 	if options.count && options.duplicated || options.duplicated && options.unique || options.count && options.unique {
-		return result, pkgErr.Wrap(InterchangeableFlagsErr, "utility Uniq error")
+		return result, fmt.Errorf("utility Uniq error: %w", InterchangeableFlagsErr)
 	}
 
 	if len(strs) == 0 {
