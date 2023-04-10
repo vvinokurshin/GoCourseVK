@@ -46,12 +46,13 @@ func SelectUsers(in, out chan interface{}) {
 			defer wg.Done()
 			user := GetUser(email)
 			mu.Lock()
-			defer mu.Unlock()
 
 			if _, ok = users[user.Email]; !ok {
 				users[user.Email] = true
 				out <- user
 			}
+
+			mu.Unlock()
 		}()
 	}
 
@@ -71,7 +72,8 @@ func SelectMessages(in, out chan interface{}) {
 		users = append(users, user)
 
 		if len(users) == GetMessagesMaxUsersBatch {
-			wg.Add(1)
+			wg.Add(
+				1)
 			batch := make([]User, len(users))
 			copy(batch, users)
 
@@ -144,6 +146,24 @@ func CheckSpam(in, out chan interface{}) {
 	wg.Wait()
 }
 
+type Messages []MsgData
+
+func (messages Messages) Len() int {
+	return len(messages)
+}
+
+func (messages Messages) Swap(i, j int) {
+	messages[i], messages[j] = messages[j], messages[i]
+}
+
+func (messages Messages) Less(i, j int) bool {
+	if messages[i].HasSpam == messages[j].HasSpam {
+		return messages[i].ID < messages[j].ID
+	}
+
+	return messages[i].HasSpam && !messages[j].HasSpam
+}
+
 func CombineResults(in, out chan interface{}) {
 	var messages []MsgData
 
@@ -156,13 +176,7 @@ func CombineResults(in, out chan interface{}) {
 		messages = append(messages, curMessage)
 	}
 
-	sort.Slice(messages, func(i, j int) bool {
-		if messages[i].HasSpam == messages[j].HasSpam {
-			return messages[i].ID < messages[j].ID
-		}
-
-		return messages[i].HasSpam && !messages[j].HasSpam
-	})
+	sort.Sort(Messages(messages))
 
 	for _, message := range messages {
 		out <- fmt.Sprintf("%s %d", strconv.FormatBool(message.HasSpam), uint64(message.ID))
